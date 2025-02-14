@@ -1,0 +1,183 @@
+.send-request-container {
+  max-width: 400px;
+  margin: 20px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.send-request-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.send-request-form input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.send-request-form button {
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.error-message {
+  color: #f44336;
+  margin: 10px 0;
+}
+
+.success-message {
+  color: #4CAF50;
+  margin: 10px 0;
+}
+
+.friends-container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+.friends-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.friend-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.friend-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.friend-info h3 {
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.friend-info p {
+  margin: 0;
+  color: #666;
+}
+
+.remove-friend-btn {
+  padding: 8px 16px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  opacity: 0.8;
+}
+
+.remove-friend-btn:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.success-message {
+  background-color: #e8f5e9;
+  color: #4caf50;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.alert {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+h2 {
+  color: #333;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+/* Empty state styling */
+.text-center .fa-users {
+  opacity: 0.5;
+}
+
+/* Success message styling */
+.alert-success {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Icon styling */
+.text-primary {
+  color: #0d6efd !important;
+}
+
+/* button styles */
+.btn {
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.modal-content {
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.modal-header {
+  border-bottom: 1px solid #eee;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+/* Adjust FriendRequests component when in modal */
+.modal-body .container {
+  padding: 0;
+}
+
+.modal-body .py-4 {
+  padding: 0 !important;
+}
+
+.modal-body h2 {
+  display: none;
+} 

@@ -1,0 +1,132 @@
+.friend-requests {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.friend-request-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.request-info h3 {
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.request-info p {
+  margin: 4px 0;
+  color: #666;
+}
+
+.request-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.accept-btn, .reject-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.accept-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.reject-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.accept-btn:hover {
+  background-color: #45a049;
+}
+
+.reject-btn:hover {
+  background-color: #da190b;
+}
+
+.request-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.request-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.card-header {
+  border-bottom: none;
+}
+
+.alert {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.badge {
+  font-weight: 500;
+  padding: 0.5em 0.8em;
+}
+
+.btn {
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+/* Empty state styling */
+.text-center .fa-user-clock,
+.text-center .fa-paper-plane {
+  opacity: 0.5;
+}
+
+/* Success message styling */
+.alert-success {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Card header icons */
+.card-header .fa-user-clock,
+.card-header .fa-paper-plane {
+  font-size: 1.1em;
+}
+
+/* Button group spacing */
+.gap-2 {
+  gap: 0.5rem !important;
+} 

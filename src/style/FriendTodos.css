@@ -1,0 +1,57 @@
+.todo-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.todo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.friend-select {
+  min-width: 200px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  padding: 8px 12px;
+  background-color: white;
+  cursor: pointer;
+}
+
+.friend-select:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.todo-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.owner-info {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.badge {
+  font-weight: 500;
+  padding: 0.5em 0.8em;
+}
+
+h2 {
+  color: #333;
+  margin: 0;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+/* Empty state styling */
+.text-center .fa-user {
+  opacity: 0.5;
+} 
