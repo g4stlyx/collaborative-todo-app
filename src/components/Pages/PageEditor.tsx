@@ -65,9 +65,17 @@ export const PageEditor = () => {
     blockId: string;
   } | null>(null);
 
+  //! basic / need fast
   //TODO: SMOOTHER, CLEANER block types
   //TODO: remove, edit etc. options when right clicked on a block
   //TODO: when "delete or backspace" is pressed on an empty block, delete the block and focus on the previous block
+  //TODO: sharing page functionality (friends should be able to share pages)
+  //! a bit advanced / can wait
+  //TODO: writing "/todo", "/heading1" etc. should create the named (todo, heading1) components
+  //TODO: block dragging functionality
+  //TODO: formatting(bold, italic etc.), size, aligning(left, center etc.) options to text.
+  //TODO: add undo/redo functionality
+  //TODO: read-only, edit etc. permission types when sharing pages to friends
 
   // Fetch page data
   useEffect(() => {
