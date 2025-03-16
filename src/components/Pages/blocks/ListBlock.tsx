@@ -5,7 +5,7 @@ interface ListBlockProps {
   block: Block;
   updateBlock: (blockId: string, content: any) => Promise<void>;
   listType: 'bullet' | 'numbered';
-  onEnterPress?: (e: React.KeyboardEvent<HTMLElement>) => boolean | undefined;
+  onEnterPress?: (e: React.KeyboardEvent<HTMLElement>) => Promise<boolean> | boolean | undefined;
 }
 
 const ListBlock: React.FC<ListBlockProps> = ({ block, updateBlock, listType, onEnterPress }) => {

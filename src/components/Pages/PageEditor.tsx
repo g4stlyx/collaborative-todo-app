@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   getPage,
@@ -16,7 +16,6 @@ import {
   Button,
   Form,
   Dropdown,
-  Modal,
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -30,9 +29,10 @@ import {
   faQuoteRight,
   faMinus,
   faChevronRight,
-  faTrash,
-  faEllipsisV,
-  faEdit,
+  faCopy,
+  faArrowUp,
+  faArrowDown,
+  faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import TextBlock from "./blocks/TextBlock";
 import HeadingBlock from "./blocks/HeadingBlock.tsx";
@@ -43,7 +43,6 @@ import CodeBlock from "./blocks/CodeBlock.tsx";
 import QuoteBlock from "./blocks/QuoteBlock.tsx";
 import DividerBlock from "./blocks/DividerBlock.tsx";
 import ToggleBlock from "./blocks/ToggleBlock.tsx";
-import PageSidebar from "./PageSidebar";
 import { useAuth } from "../../contexts/AuthContext";
 import "../../style/PageEditor.css";
 import { Timestamp } from "firebase/firestore";
@@ -57,21 +56,24 @@ export const PageEditor = () => {
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showNewPageModal, setShowNewPageModal] = useState(false);
-  const [newPageTitle, setNewPageTitle] = useState("");
+  const [, setShowNewPageModal] = useState(false);
+  const [newPageTitle, ] = useState("");
   const [contextMenuPosition, setContextMenuPosition] = useState<{
     top: number;
     left: number;
     blockId: string;
+    index: number;
   } | null>(null);
+  const [focusedBlockId, setFocusedBlockId] = useState<string | null>(null);
 
   //! basic / need fast
   //TODO: SMOOTHER, CLEANER block types
-  //TODO: remove, edit etc. options when right clicked on a block
+  //TODO: "enter" doesnt work properly, it keeps the original block as it is
+  //TODO: while typing, cursor position may change, go to the beginning of the block
   //TODO: when "delete or backspace" is pressed on an empty block, delete the block and focus on the previous block
-  //TODO: sharing page functionality (friends should be able to share pages)
   //! a bit advanced / can wait
   //TODO: writing "/todo", "/heading1" etc. should create the named (todo, heading1) components
+  //TODO: sharing page functionality (friends should be able to share pages)
   //TODO: block dragging functionality
   //TODO: formatting(bold, italic etc.), size, aligning(left, center etc.) options to text.
   //TODO: add undo/redo functionality
@@ -107,15 +109,19 @@ export const PageEditor = () => {
 
   // Handle click outside context menu to close it
   useEffect(() => {
-    const handleClickOutside = () => {
-      setContextMenuPosition(null);
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if the user clicked outside the context menu
+      const menuElement = document.querySelector('.block-context-menu');
+      if (contextMenuPosition && menuElement && !menuElement.contains(event.target as Node)) {
+        setContextMenuPosition(null);
+      }
     };
 
     document.addEventListener("click", handleClickOutside);
     return () => {
       document.removeEventListener("click", handleClickOutside);
     };
-  }, []);
+  }, [contextMenuPosition]);
 
   // Save title changes
   const handleTitleChange = useCallback(async () => {
@@ -216,6 +222,7 @@ export const PageEditor = () => {
       return newBlockId;
     } catch (err) {
       console.error("Error adding block:", err);
+      return null;
     }
   };
 
@@ -252,6 +259,9 @@ export const PageEditor = () => {
         .map((block, idx) => ({ ...block, position: idx }));
 
       setBlocks(updatedBlocks);
+      
+      // Close context menu if open
+      setContextMenuPosition(null);
     } catch (err) {
       console.error("Error deleting block:", err);
     }
@@ -259,52 +269,223 @@ export const PageEditor = () => {
 
   // Handle Enter key press in blocks
   const handleEnterInBlock = useCallback(
-    (e: React.KeyboardEvent, block: Block) => {
+    async (e: React.KeyboardEvent, block: Block) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-
-        // Get the current selection information
-        const selection = window.getSelection();
-        const range = selection?.getRangeAt(0);
-        
-        if (!range) return;
-        
-        const currentContent = { ...block.content };
-        const targetEl = e.currentTarget as HTMLElement;
-        
-        // For text-based blocks (text, headings, lists, todos)
-        if ("text" in currentContent) {
-          const textContent = currentContent.text || "";
-          const cursorPosition = range.startOffset;
+  
+        try {
+          // Get the current selection information
+          const selection = window.getSelection();
+          const range = selection?.getRangeAt(0);
           
-          // Split the text at cursor position
-          const textBefore = textContent.substring(0, cursorPosition);
-          const textAfter = textContent.substring(cursorPosition);
+          if (!range) return false;
           
-          // Update the current block with text before cursor
-          updateBlockContent(block.id, { ...currentContent, text: textBefore });
+          const currentContent = { ...block.content };
           
-          // Create a new block with text after cursor
-          const newContent = { ...currentContent, text: textAfter };
-          
-          // For todo blocks, new items should always be unchecked
-          if (block.type === "todo") {
-            newContent.checked = false;
+          // For text-based blocks (text, headings, lists, todos)
+          if ("text" in currentContent) {
+            const textContent = currentContent.text || "";
+            
+            // Calculate cursor position properly by considering all text nodes
+            let cursorPosition = 0;
+            const container = e.currentTarget;
+            
+            // If the selection is within a text node, use its offset
+            if (range.startContainer.nodeType === Node.TEXT_NODE) {
+              cursorPosition = range.startOffset;
+              
+              // Account for any preceding text nodes
+              let node = range.startContainer.previousSibling;
+              while (node) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                  cursorPosition += node.textContent?.length || 0;
+                }
+                node = node.previousSibling;
+              }
+            }
+            
+            // Split the text at cursor position
+            const textBefore = textContent.substring(0, cursorPosition);
+            const textAfter = textContent.substring(cursorPosition);
+            
+            // First update the current block with text before cursor
+            await updateBlockContent(block.id, { 
+              ...currentContent, 
+              text: textBefore
+            });
+            
+            // Create a new block with text after cursor
+            const newContent = { ...currentContent, text: textAfter };
+            
+            // For todo blocks, new items should always be unchecked
+            if (block.type === "todo") {
+              newContent.checked = false;
+            }
+            
+            // Add the new block right after the current block
+            const newBlockId = await addBlock(block.type, block.position + 1, newContent);
+            
+            if (newBlockId) {
+              // Set the focus to the new block with proper delay
+              setTimeout(() => {
+                setFocusedBlockId(newBlockId);
+              }, 50);
+            }
+            
+            return true;
+          } else {
+            // For non-text blocks, create an empty block of the same type
+            const newBlockId = await addBlock(block.type, block.position + 1);
+            
+            if (newBlockId) {
+              setTimeout(() => {
+                setFocusedBlockId(newBlockId);
+              }, 50);
+            }
+            
+            return true;
           }
-          
-          // Add the new block right after the current block
-          addBlock(block.type, block.position + 1, newContent);
-        } else {
-          // For non-text blocks (like dividers, images, etc.), just create an empty block of the same type
-          addBlock(block.type, block.position + 1);
+        } catch (error) {
+          console.error("Error handling Enter key:", error);
+          return false;
         }
-        
-        return true; // Signal that we handled the key press
       }
-      return false; // We didn't handle it
+      return false;
     },
     [updateBlockContent, addBlock]
   );
+
+  const handleContextMenu = useCallback((e: React.MouseEvent, block: Block, index: number) => {
+    e.preventDefault(); // Prevent the default browser context menu
+    
+    // Calculate position for the context menu
+    const { clientX, clientY } = e;
+    
+    // Set the position and info about the clicked block
+    setContextMenuPosition({
+      top: clientY,
+      left: clientX,
+      blockId: block.id,
+      index: index
+    });
+  }, []);
+
+  const duplicateBlock = async (blockId: string, index: number) => {
+    try {
+      const blockToDuplicate = blocks.find(block => block.id === blockId);
+      if (!blockToDuplicate) return;
+      
+      // Create a new block with the same content
+      await addBlock(blockToDuplicate.type, index + 1, { ...blockToDuplicate.content });
+      
+      // Close the context menu
+      setContextMenuPosition(null);
+    } catch (err) {
+      console.error("Error duplicating block:", err);
+    }
+  };
+
+  const moveBlockUp = async (_blockId: string, index: number) => {
+    if (index <= 0) return;
+    
+    try {
+      const updatedBlocks = [...blocks];
+      const blockToMove = updatedBlocks[index];
+      const blockAbove = updatedBlocks[index - 1];
+      
+      // Swap positions
+      updatedBlocks[index] = blockAbove;
+      updatedBlocks[index - 1] = blockToMove;
+      
+      // Update positions property
+      const finalBlocks = updatedBlocks.map((block, idx) => ({
+        ...block,
+        position: idx,
+      }));
+      
+      // Update in database
+      await Promise.all([
+        updateBlock(blockToMove.id, { position: index - 1 }),
+        updateBlock(blockAbove.id, { position: index })
+      ]);
+      
+      // Update local state
+      setBlocks(finalBlocks);
+      setContextMenuPosition(null);
+    } catch (err) {
+      console.error("Error moving block up:", err);
+    }
+  };
+
+  const moveBlockDown = async (_blockId: string, index: number) => {
+    if (index >= blocks.length - 1) return;
+    
+    try {
+      const updatedBlocks = [...blocks];
+      const blockToMove = updatedBlocks[index];
+      const blockBelow = updatedBlocks[index + 1];
+      
+      // Swap positions
+      updatedBlocks[index] = blockBelow;
+      updatedBlocks[index + 1] = blockToMove;
+      
+      // Update positions property
+      const finalBlocks = updatedBlocks.map((block, idx) => ({
+        ...block,
+        position: idx,
+      }));
+      
+      // Update in database
+      await Promise.all([
+        updateBlock(blockToMove.id, { position: index + 1 }),
+        updateBlock(blockBelow.id, { position: index })
+      ]);
+      
+      // Update local state
+      setBlocks(finalBlocks);
+      setContextMenuPosition(null);
+    } catch (err) {
+      console.error("Error moving block down:", err);
+    }
+  };
+  
+  // Focus handling for newly created blocks
+  useEffect(() => {
+    if (focusedBlockId) {
+      setTimeout(() => {
+        // Find the element that needs focus
+        const blockElement = document.getElementById(`block-${focusedBlockId}`);
+        const editableElement = blockElement?.querySelector('[contenteditable="true"]');
+        
+        if (editableElement) {
+          // Set focus to the element
+          (editableElement as HTMLElement).focus();
+          
+          // Try to set cursor at the beginning of the element
+          const selection = window.getSelection();
+          if (selection) {
+            const range = document.createRange();
+            
+            // Find text node or use the element itself
+            if (editableElement.firstChild && editableElement.firstChild.nodeType === Node.TEXT_NODE) {
+              const textNode = editableElement.firstChild;
+              range.setStart(textNode, 0); // Place cursor at the beginning of text
+              range.setEnd(textNode, 0);
+            } else {
+              range.setStart(editableElement, 0);
+              range.setEnd(editableElement, 0);
+            }
+            
+            selection.removeAllRanges();
+            selection.addRange(range);
+          }
+        }
+        
+        // Clear the focused block ID after focus is set
+        setFocusedBlockId(null);
+      }, 100); // Slightly longer delay for better reliability
+    }
+  }, [focusedBlockId]);
 
   if (loading) {
     return (
@@ -347,7 +528,12 @@ export const PageEditor = () => {
 
       <div className="blocks-container">
         {blocks.map((block, index) => (
-          <div key={block.id} className="block-wrapper">
+          <div 
+            key={block.id} 
+            id={`block-${block.id}`}
+            className="block-wrapper"
+            onContextMenu={(e) => handleContextMenu(e, block, index)}
+          >
             <div className="block-content">
               {block.type === "text" && (
                 <TextBlock 
@@ -496,6 +682,52 @@ export const PageEditor = () => {
           </div>
         )}
       </div>
+      
+      {/* Context Menu */}
+      {contextMenuPosition && (
+        <div 
+          className="block-context-menu"
+          style={{
+            position: 'fixed',
+            top: `${contextMenuPosition.top}px`,
+            left: `${contextMenuPosition.left}px`,
+            zIndex: 1000,
+            backgroundColor: 'white',
+            boxShadow: '0 0 10px rgba(0,0,0,0.2)',
+            borderRadius: '4px',
+            padding: '4px 0'
+          }}
+        >
+          <div className="context-menu-item" onClick={() => {
+            const blockType = blocks.find(b => b.id === contextMenuPosition.blockId)?.type || 'text';
+            addBlock(blockType, contextMenuPosition.index + 1);
+            setContextMenuPosition(null);
+          }}>
+            <FontAwesomeIcon icon={faPlus} className="me-2" />
+            <span>Insert Below</span>
+          </div>
+          
+          <div className="context-menu-item" onClick={() => duplicateBlock(contextMenuPosition.blockId, contextMenuPosition.index)}>
+            <FontAwesomeIcon icon={faCopy} className="me-2" />
+            <span>Duplicate</span>
+          </div>
+          
+          <div className="context-menu-item" onClick={() => moveBlockUp(contextMenuPosition.blockId, contextMenuPosition.index)}>
+            <FontAwesomeIcon icon={faArrowUp} className="me-2" />
+            <span>Move Up</span>
+          </div>
+          
+          <div className="context-menu-item" onClick={() => moveBlockDown(contextMenuPosition.blockId, contextMenuPosition.index)}>
+            <FontAwesomeIcon icon={faArrowDown} className="me-2" />
+            <span>Move Down</span>
+          </div>
+          
+          <div className="context-menu-item delete" onClick={() => removeBlock(contextMenuPosition.blockId)}>
+            <FontAwesomeIcon icon={faTrashAlt} className="me-2" />
+            <span>Delete</span>
+          </div>
+        </div>
+      )}
     </Container>
   );
 };

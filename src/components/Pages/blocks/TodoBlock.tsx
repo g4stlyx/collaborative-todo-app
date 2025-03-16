@@ -5,7 +5,7 @@ import { Form } from "react-bootstrap";
 interface TodoBlockProps {
   block: Block;
   updateBlock: (blockId: string, content: any) => void;
-  onEnterPress?: (e: React.KeyboardEvent<HTMLElement>) => boolean | undefined;
+  onEnterPress?: (e: React.KeyboardEvent<HTMLElement>) => Promise<boolean> | boolean | undefined;
 }
 
 const TodoBlock: React.FC<TodoBlockProps> = ({ block, updateBlock, onEnterPress }) => {
